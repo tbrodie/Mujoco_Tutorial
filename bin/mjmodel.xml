@@ -1,0 +1,55 @@
+<mujoco model="MuJoCo Model">
+  <compiler angle="radian" autolimits="true"/>
+  <option timestep="0.001">
+    <flag contact="disable" energy="enable" sensornoise="enable"/>
+  </option>
+  <statistic meansize="2.75866" extent="14.01" center="6.005 0 4.254"/>
+  <asset>
+    <material name="blue" rgba="0 0 1 1"/>
+    <material name="red" rgba="1 0 0 0.4"/>
+    <material name="green" rgba="0 1 0 1"/>
+    <material name="white"/>
+    <material name="purple" rgba="1 0.1 1 1"/>
+    <material name="yellow" rgba="1 1 0 1"/>
+    <material name="gray" rgba="0.5 0.5 0.5 1"/>
+  </asset>
+  <worldbody>
+    <geom size="10 10 0.1" type="plane" material="white"/>
+    <light pos="0 0 10" dir="0 0 -1" diffuse="0.5 0.5 0.5"/>
+    <body name="trolley" pos="0 0 5">
+      <joint name="slider" pos="0 0 0" axis="1 0 0" type="slide" range="-5 5"/>
+      <geom name="trolley" size="0.5 0.5 0.3" type="box" material="green"/>
+      <body name="arm" pos="5 0 -0.5">
+        <joint name="rotator" pos="-5 0 0.2" axis="0 0 1" range="-3.14159 3.14159"/>
+        <geom name="arm" size="5 0.2 0.2" type="box" material="red"/>
+        <body name="boom" pos="1 0 0">
+          <joint name="extender" pos="0 0 0" axis="1 0 0" type="slide"/>
+          <geom name="boom" size="5 0.19 0.19" type="box" material="blue"/>
+          <site name="boom_tip" pos="5 0 0" size="0.02" rgba="1 0 0.5 1"/>
+          <body name="cable" pos="5 0 -2.2">
+            <joint name="pendulum" pos="0 0 2" type="ball"/>
+            <geom name="cable" size="0.01 2" type="capsule" material="purple"/>
+            <body name="payload" pos="0 0 -2">
+              <geom name="payload" size="1" mass="5" material="yellow"/>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+  <actuator>
+    <general name="trolley_position_servo" joint="slider" biastype="affine" gainprm="100000 0 0 0 0 0 0 0 0 0" biasprm="0 -100000 0 0 0 0 0 0 0 0"/>
+    <general name="trolley_velocity_servo" joint="slider" biastype="affine" gainprm="1000 0 0 0 0 0 0 0 0 0" biasprm="0 0 -1000 0 0 0 0 0 0 0"/>
+    <general name="arm_position_servo" joint="rotator" biastype="affine" gainprm="0 0 0 0 0 0 0 0 0 0"/>
+    <general name="arm_velocity_servo" joint="rotator" biastype="affine" gainprm="1000 0 0 0 0 0 0 0 0 0" biasprm="0 0 -1000 0 0 0 0 0 0 0"/>
+    <general name="boom_position_servo" joint="extender" biastype="affine" gainprm="100000 0 0 0 0 0 0 0 0 0" biasprm="0 -100000 0 0 0 0 0 0 0 0"/>
+    <general name="boom_velocity_servo" joint="extender" biastype="affine" gainprm="1000 0 0 0 0 0 0 0 0 0" biasprm="0 0 -1000 0 0 0 0 0 0 0"/>
+    <general name="pend_position_servo" joint="pendulum" biastype="affine" gainprm="0.1 0 0 0 0 0 0 0 0 0" biasprm="0 -0.1 0 0 0 0 0 0 0 0"/>
+    <general name="pend_velocity_servo" joint="pendulum" biastype="affine" gainprm="0 0 0 0 0 0 0 0 0 0"/>
+    <general name="sensor_position" site="boom_tip" biastype="affine" gainprm="1000000 0 0 0 0 0 0 0 0 0" biasprm="0 -1000000 0 0 0 0 0 0 0 0"/>
+  </actuator>
+  <sensor>
+    <accelerometer site="boom_tip" name="b_t_accel"/>
+    <velocimeter site="boom_tip" name="b_t_vel"/>
+  </sensor>
+</mujoco>

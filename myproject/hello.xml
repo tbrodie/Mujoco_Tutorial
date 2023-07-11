@@ -1,0 +1,89 @@
+<mujoco>
+	<option timestep="0.001" integrator="RK4" gravity="0 0 -9.81" >
+		<flag sensornoise="enable" energy="enable" contact="disable"  clampctrl="enable" />
+	</option>
+
+	<default>
+    	<default class="translation">
+    		<general gainprm="100" biasprm="0 -100 -100" biastype="affine" />
+    	</default>
+    	<default class="rotation">
+      <!--
+      Note that the rotational control range is purposefully limited to (-pi/2, pi/2) to avoid the
+      documented instabillity near pi, which is due to taking quaternion differences.
+      Increase this range to pi or bigger in order to see the instabillity.
+      See here for more details https://mujoco.readthedocs.io/en/latest/XMLreference.html#actuator
+      -->
+      		<general gainprm=".5" biasprm="0 -.5 -.05" biastype="affine" />
+      	</default>
+      	<joint damping="1e-4"/>
+      	<site type="box" size=".012 .012 .012" rgba=".7 .7 .8 1"/>
+    </default>
+
+	<asset>
+		<material name="blue" rgba="0 0 1 1"/>
+		<material name="red" rgba="1 0 0 .4"/>
+		<material name="green" rgba="0 1 0 1"/>
+		<material name="white" rgba="1 1 1 1"/>
+		<material name="purple" rgba="1 .1 1 1"/>
+		<material name="yellow" rgba="1 1 0 1"/>
+		<material name="gray" rgba=".5 .5 .5 1"/>
+	</asset>
+
+
+	<worldbody>
+			<light diffuse=".5 .5 .5" pos="0 0 100" dir="0 0 -1"/>
+		<geom type="plane" size="20 20 0.1" material="white" />
+		<body name="leftwall" pos="-20 0 0" euler="0 90 0">
+			<geom name="leftwall" type="plane" size="20 20 .1" material="red" />
+		</body>
+		<body name="rightwall" pos="20 0 0" euler="0 -90 0">
+			<geom name="rightwall" type="plane" size="20 20 .1" material="red" />
+		</body>
+		<body name="backwall" pos="0 20 0" euler="90 0 0">
+			<geom name="backwall" type="plane" size="20 20 .1" material="red" />
+		</body>
+		<body name="trolley" pos="0 0 6" euler="0 0 0">
+			<joint name="slider" type="slide"  pos="0 0 0" axis="1 0 0" limited="true" range="-14 14" />
+			<geom name="trolley" type="box" size="1 .5 .3"  material="green" mass="100" />
+			<body name="arm" pos="5 0 -0.5" euler="0 0 0">
+				<geom name="arm" type="box" size="5 .2 .2" material="red" mass="100"/>
+				<joint name="backlash" type="hinge" pos="-5 0 0" axis="0 0 1" armature="0.01" />
+				<joint name="rotator" type="hinge" pos="-5 0 0" axis="0 0 1" limited="true" range="-3.14 3.14"/>
+				<body name="boom" pos="1 0 0" euler="0 0 0" >
+					<geom name="boom" type="box" size="5 .19 .19" material="blue" mass="100" />
+					<joint name="extender" type="slide" pos="0 0 0" axis="1 0 0" limited="true" range="0 10" />
+					<!--joint name="extender2" type="slide" pos="-2 0 0" axis="1 0 0" limited="true" range="0 5" /-->
+					<body name="cable" pos="5 0 -2.2" euler="0 0 0">
+						<geom name="cable" type="capsule" size=".01 2" material="purple"/>
+						<site name="boom_tip" type="sphere" size=".5" material="white" pos="0 0 2" euler="0 0 0"/>
+						<joint name="pendulum" type="ball" pos="0 0 2" />
+						<body name="payload" pos="0 0 -2" euler="0 0 0">
+							<geom name="payload" type="sphere" size="1" material="yellow" mass="5"/>
+						</body>
+					</body>
+				</body>
+			</body>
+		</body>
+	</worldbody>
+	<actuator>
+		<!--position name="trolley_position_servo" joint="slider" kp="0"  /-->
+		<!--velocity name="trolley_velocity_servo" joint="slider" kv="1000"/-->
+		<cylinder name="trolley_velocity_servo" joint="slider" ctrllimited="true" forcelimited="false" ctrlrange="0 10" lengthrange="0 1" gear="100 0 0 0 0 0"  />
+		<!--position name="arm_position_servo" joint="rotator" kp="0"/-->
+		<velocity name="arm_velocity_servo" joint="rotator" kv="100"/>
+		<!--position name="boom_position_servo" joint="extender" kp="0"/-->
+		<cylinder name="boom_velocity_servo" joint="extender" ctrllimited="true" forcelimited="false" ctrlrange="0 10" lengthrange="0 1" gear=".1 0 0 0 0 0"  />
+		<!--position name="pend_position_servo" joint="pendulum" kp="0"/-->
+		<velocity name="pend_velocity_servo" joint="pendulum" kv="1"/>
+		<general name="x"  site="boom_tip"  gear="1 0 0 0 0 0" class="translation"/>
+    	<general name="y"  site="boom_tip"  gear="0 1 0 0 0 0" class="translation"/>
+    	<general name="z"  site="boom_tip"  gear="0 0 1 0 0 0" class="translation"/>
+
+	</actuator>
+
+	<sensor>
+		<accelerometer name="b_t_accel" site="boom_tip"/>
+		<velocimeter name="b_t_vel" site="boom_tip"/>
+	</sensor>
+</mujoco>
